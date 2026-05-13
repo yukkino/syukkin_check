@@ -374,46 +374,105 @@ document.getElementById('fDate').addEventListener('change', () => fetchLessons()
 
 function fetchLessons() {
   const name = document.getElementById('fName').value.trim();
+  const dateVal = document.getElementById('fDate').value; // "2026-05-12" 形式
   const box  = document.getElementById('lessonBox');
   const rows = document.getElementById('lessonRows');
 
-  if (name.length < 2) { box.classList.remove('show'); return; }
-  if (!GAS_URL) { box.classList.remove('show'); return; }
+  if (name.length < 2) { 
+    box.classList.remove('show'); 
+    return; 
+  }
+  if (!GAS_URL) { 
+    box.classList.remove('show'); 
+    return; 
+  }
+
+  // 日付が未指定の場合はスキップ
+  if (!dateVal) {
+    box.classList.remove('show');
+    return;
+  }
 
   box.classList.add('show');
   rows.innerHTML = '<div class="lesson-loading">⏳ 読み込み中...</div>';
 
   // 月を計算（入力した日付から）
-  const dateVal = document.getElementById('fDate').value;
-  const d = dateVal ? new Date(dateVal) : new Date();
+  const d = new Date(dateVal + 'T00:00:00');
   const yy = String(d.getFullYear()).slice(-2);
   const mm = d.getMonth() + 1;
   const monthStr = yy + '年' + mm + '月';
 
-  const url = GAS_URL + '?name=' + encodeURIComponent(name) + '&month=' + encodeURIComponent(monthStr);
+  // デバッグモード（開発時のみ=trueに変更）
+  const debug = false;
+  
+  // ★ 重要：date パラメータで入力日付を送信
+  const url = GAS_URL + 
+    '?name=' + encodeURIComponent(name) + 
+    '&month=' + encodeURIComponent(monthStr) +
+    '&date=' + encodeURIComponent(dateVal) +  // ← 新規追加
+    (debug ? '&debug=true' : '');
+
+  console.log('GAS URL:', url);
 
   fetch(url)
-    .then(r => r.json())
-    .then(data => {
-      if (data.error) {
-        rows.innerHTML = '<div class="lesson-error">❌ ' + data.error + '</div>';
-        return;
-      }
-      lessonCache = data.lessons || [];
-      if (lessonCache.length === 0) {
-        rows.innerHTML = '<div class="lesson-loading" style="color:#C06060">本日のレッスンが見つかりません</div>';
-        return;
-      }
-      rows.innerHTML = lessonCache.map(l =>
-        `<div class="lesson-row">
-          <div class="lesson-time">${l.start}〜${l.end}</div>
-          <div class="lesson-prog">${l.program}</div>
-          <div class="lesson-mgr">👤 管理者：${l.manager}</div>
-        </div>`
-      ).join('');
+    .then(r => {
+      if (!r.ok) throw new Error(`HTTP ${r.status}`);
+      return r.json();
     })
-    .catch(() => {
-      rows.innerHTML = '<div class="lesson-error">❌ 通信エラーが発生しました</div>';
+    .then(data => {
+      console.log('GAS応答:', data);
+
+      if (data.error) {
+        rows.innerHTML = '<div class="lesson-error">❌ ' + data.error + 
+          (data.stack ? '<br><small style="color:#999">' + data.stack.substring(0, 100) + '</small>' : '') + 
+          '</div>';
+        return;
+      }
+
+      lessonCache = data.lessons || [];
+
+      // 指定日付を見やすく表示
+      const displayDate = new Date(dateVal + 'T00:00:00').toLocaleDateString('ja-JP', {
+        year: 'numeric',
+        month: 'long',
+        day: 'numeric',
+        weekday: 'short'
+      });
+
+      if (lessonCache.length === 0) {
+        rows.innerHTML = '<div class="lesson-loading" style="color:#C06060">📅 ' + displayDate + ' のレッスンはありません</div>';
+        return;
+      }
+
+      // レッスンを時間でソート
+      lessonCache.sort((a, b) => {
+        const timeA = parseInt(a.start.replace(':', ''));
+        const timeB = parseInt(b.start.replace(':', ''));
+        return timeA - timeB;
+      });
+
+      rows.innerHTML = 
+        '<div style="font-size:12px;color:#999;margin-bottom:8px;">📅 ' + displayDate + '</div>' +
+        lessonCache.map((l, idx) =>
+          `<div class="lesson-row">
+            <div style="font-size:11px;color:#999;margin-bottom:3px;">レッスン ${idx + 1}</div>
+            <div class="lesson-time">${l.start}〜${l.end}</div>
+            <div class="lesson-prog">${l.program}</div>
+            <div class="lesson-mgr">👤 管理者：${l.manager}</div>
+            ${l.location ? '<div class="lesson-location" style="font-size:11px;color:#999;">📍 ' + l.location + '</div>' : ''}
+            ${l.contract ? '<div class="lesson-contract" style="font-size:11px;color:#666;">📋 ' + l.contract + '</div>' : ''}
+            ${l.notes ? '<div class="lesson-notes" style="font-size:11px;color:#C06060;margin-top:3px;">⚠️ ' + l.notes + '</div>' : ''}
+          </div>`
+        ).join('');
+
+      // デバッグ情報があれば表示
+      if (data.debug && data.debug.length > 0) {
+        console.table(data.debug);
+      }
+    })
+    .catch(err => {
+      console.error('Fetch error:', err);
+      rows.innerHTML = '<div class="lesson-error">❌ 通信エラーが発生しました<br><small style="color:#999">' + err.message + '</small></div>';
     });
 }
 
