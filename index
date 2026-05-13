@@ -1,0 +1,510 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>出勤チェックリスト</title>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@300;400;500;700&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg:         #FDF8F4;
+  --surface:    #FFFFFF;
+  --pink:       #E8748A;
+  --pink-light: #FFF0F3;
+  --pink-mid:   #F4A8B5;
+  --text:       #2C2020;
+  --muted:      #9A8080;
+  --border:     #F0E0E4;
+  --green:      #4CAF88;
+  --green-bg:   #F0FAF5;
+  --shadow:     0 2px 20px rgba(232,116,138,.10);
+}
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:'Noto Sans JP',sans-serif;background:var(--bg);min-height:100vh;padding:20px 16px 100px;color:var(--text)}
+
+/* ヘッダー */
+.hd{text-align:center;margin-bottom:22px}
+.hd .sakura{font-size:30px;display:block;animation:fl 3s ease-in-out infinite}
+@keyframes fl{0%,100%{transform:translateY(0)}50%{transform:translateY(-5px)}}
+.hd h1{font-size:11px;font-weight:700;color:var(--pink);letter-spacing:.15em;text-transform:uppercase;margin-top:4px}
+
+/* あいさつ */
+.greeting{background:linear-gradient(135deg,#FFF0F3,#FFF8E8);border:1px solid var(--border);border-radius:16px;padding:16px 18px;margin-bottom:18px}
+.greeting p{font-size:13.5px;line-height:1.75;color:var(--muted)}
+.greeting strong{color:var(--pink);font-weight:700}
+
+/* 入力エリア */
+.card{background:var(--surface);border:1px solid var(--border);border-radius:16px;padding:18px;margin-bottom:14px;box-shadow:var(--shadow)}
+.card-title{font-size:11px;font-weight:700;color:var(--pink);letter-spacing:.1em;text-transform:uppercase;margin-bottom:14px}
+
+.row2{display:flex;gap:10px}
+.field{flex:1;display:flex;flex-direction:column;gap:5px}
+.field label{font-size:11px;color:var(--muted);font-weight:500}
+.field input,.field select{
+  border:1.5px solid var(--border);border-radius:10px;padding:10px 12px;
+  font-size:14px;font-family:'Noto Sans JP',sans-serif;color:var(--text);
+  background:var(--bg);outline:none;transition:border-color .2s;width:100%
+}
+.field input:focus,.field select:focus{border-color:var(--pink)}
+
+/* レッスン情報 */
+.lesson-box{
+  margin-top:12px;background:var(--pink-light);border:1.5px dashed var(--pink-mid);
+  border-radius:12px;padding:14px 16px;display:none
+}
+.lesson-box.show{display:block}
+.lesson-box h3{font-size:11px;font-weight:700;color:var(--pink);letter-spacing:.06em;margin-bottom:10px}
+.lesson-row{
+  background:white;border-radius:10px;padding:10px 12px;margin-bottom:8px;
+  border-left:3px solid var(--pink);
+}
+.lesson-row:last-child{margin-bottom:0}
+.lesson-time{font-size:15px;font-weight:700;color:var(--text);margin-bottom:3px}
+.lesson-prog{font-size:12px;color:var(--muted);line-height:1.5;margin-bottom:3px}
+.lesson-mgr{font-size:11px;color:var(--pink);font-weight:500}
+.lesson-loading{font-size:13px;color:var(--muted);text-align:center;padding:8px 0}
+.lesson-error{font-size:12px;color:#C06060;background:#FFF0F0;border-radius:8px;padding:8px 10px;margin-top:8px}
+
+/* プログレス */
+.prog-wrap{background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:14px 18px;margin-bottom:14px;box-shadow:var(--shadow)}
+.prog-label{display:flex;justify-content:space-between;font-size:12px;color:var(--muted);margin-bottom:8px}
+.prog-label b{color:var(--pink)}
+.prog-bar{height:6px;background:var(--border);border-radius:3px;overflow:hidden}
+.prog-fill{height:100%;background:linear-gradient(90deg,var(--pink-mid),var(--pink));border-radius:3px;transition:width .4s cubic-bezier(.34,1.56,.64,1);width:0%}
+
+/* セクション */
+.section{background:var(--surface);border:1px solid var(--border);border-radius:16px;margin-bottom:12px;box-shadow:var(--shadow);overflow:hidden}
+.sec-hd{padding:13px 16px;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:8px}
+.sec-hd .ico{font-size:15px}
+.sec-hd h2{font-size:13px;font-weight:700}
+.sec-hd .cnt{margin-left:auto;font-size:11px;color:var(--muted);background:var(--bg);padding:3px 9px;border-radius:20px;font-weight:500;transition:all .2s}
+.sec-hd .cnt.done{background:var(--green-bg);color:var(--green);font-weight:700}
+.opt-badge{font-size:10px;background:var(--muted);color:white;padding:2px 7px;border-radius:10px;font-weight:500}
+
+.item{padding:13px 16px;border-bottom:1px solid var(--border);display:flex;align-items:flex-start;gap:11px;cursor:pointer;transition:background .15s;-webkit-tap-highlight-color:transparent}
+.item:last-child{border-bottom:none}
+.item:active{background:var(--pink-light)}
+
+.cb{width:22px;height:22px;border-radius:6px;border:2px solid var(--border);display:flex;align-items:center;justify-content:center;flex-shrink:0;margin-top:1px;transition:all .2s;background:var(--bg)}
+.cb.on{background:var(--pink);border-color:var(--pink)}
+.cb.on::after{content:'✓';color:white;font-size:13px;font-weight:700}
+
+.num{width:20px;height:20px;border-radius:50%;background:var(--border);color:var(--muted);font-size:10px;font-weight:700;display:flex;align-items:center;justify-content:center;flex-shrink:0;margin-top:2px;transition:all .2s}
+.item.on .num{background:var(--pink-light);color:var(--pink)}
+
+.txt{flex:1;font-size:14px;line-height:1.5;transition:color .2s}
+.item.on .txt{color:var(--muted);text-decoration:line-through;text-decoration-color:var(--pink-mid)}
+.txt a{font-size:11px;color:var(--pink);display:block;margin-top:3px;font-weight:500;text-decoration:none}
+
+/* 相談 */
+.radio-row{display:flex;gap:10px;margin-bottom:12px}
+.rb{flex:1;padding:11px;border:2px solid var(--border);border-radius:10px;text-align:center;font-size:14px;font-family:'Noto Sans JP',sans-serif;font-weight:500;cursor:pointer;transition:all .2s;background:var(--bg);color:var(--muted)}
+.rb.on{border-color:var(--pink);background:var(--pink-light);color:var(--pink)}
+.ct-box{display:none}
+.ct-box.show{display:block}
+.ct-box label{font-size:11px;color:var(--muted);margin-bottom:5px;display:block}
+.ct-box textarea{width:100%;border:1.5px solid var(--border);border-radius:10px;padding:11px 12px;font-size:14px;font-family:'Noto Sans JP',sans-serif;color:var(--text);background:var(--bg);resize:vertical;min-height:76px;outline:none;transition:border-color .2s}
+.ct-box textarea:focus{border-color:var(--pink)}
+
+/* 警告 */
+.warn{background:#FFF8E8;border:1px solid #FFD97A;border-radius:10px;padding:10px 14px;font-size:12px;color:#8A6A00;margin-bottom:14px;display:none}
+.warn.show{display:block}
+
+/* 送信ボタン */
+.btn-submit{
+  width:100%;padding:18px;background:linear-gradient(135deg,var(--pink),#D4557A);
+  color:white;border:none;border-radius:14px;font-size:16px;font-weight:700;
+  font-family:'Noto Sans JP',sans-serif;cursor:pointer;letter-spacing:.04em;
+  box-shadow:0 4px 20px rgba(232,116,138,.35);transition:all .2s
+}
+.btn-submit:disabled{background:linear-gradient(135deg,#E0C0C8,#C8A0B0);box-shadow:none;cursor:not-allowed}
+.btn-submit sub{display:block;font-size:11px;font-weight:400;opacity:.85;margin-top:3px}
+.btn-submit:not(:disabled):active{transform:scale(.98)}
+
+/* 完了画面 */
+#doneView{display:none;padding:8px 0 0}
+.done-hero{text-align:center;padding:28px 0 20px}
+.done-hero .big{font-size:54px;animation:pop .5s ease}
+@keyframes pop{0%{transform:scale(0)}70%{transform:scale(1.2)}100%{transform:scale(1)}}
+.done-hero h2{font-size:20px;font-weight:700;margin:12px 0 8px}
+.done-hero p{font-size:14px;color:var(--muted);line-height:1.75}
+
+.line-note{background:var(--green-bg);border:1px solid #B8E8D5;border-radius:12px;padding:14px 16px;font-size:12px;color:#2D7A5A;line-height:1.65;margin:20px 0 12px}
+.line-note b{font-weight:700}
+
+.btn-line{
+  display:block;width:100%;padding:17px;background:#06C755;color:white;border:none;
+  border-radius:14px;font-size:15px;font-weight:700;font-family:'Noto Sans JP',sans-serif;
+  cursor:pointer;letter-spacing:.04em;box-shadow:0 4px 16px rgba(6,199,85,.30);
+  transition:all .2s;text-decoration:none;text-align:center;margin-bottom:10px
+}
+.btn-line:active{transform:scale(.98)}
+
+.btn-reset{
+  width:100%;padding:14px;background:none;border:1.5px solid var(--border);
+  border-radius:12px;font-size:14px;font-family:'Noto Sans JP',sans-serif;
+  color:var(--muted);cursor:pointer;transition:all .2s
+}
+.btn-reset:active{background:var(--bg)}
+
+/* GASセットアップ案内 */
+.setup-note{
+  background:#F8F8FF;border:1px solid #D0D0F0;border-radius:12px;
+  padding:14px 16px;font-size:12px;color:#404070;line-height:1.65;margin-bottom:14px;display:none
+}
+.setup-note b{font-weight:700;color:#5050C0}
+</style>
+</head>
+<body>
+
+<!-- ========== フォーム画面 ========== -->
+<div id="formView">
+
+  <div class="hd">
+    <span class="sakura">🌸</span>
+    <h1>出勤チェックリスト</h1>
+  </div>
+
+  <div class="greeting">
+    <p>本日もよろしくお願いします🌸<br>
+    <strong>下記は配信エラーに直結する為、必ずご対応ください</strong></p>
+  </div>
+
+  <!-- 名前入力 -->
+  <div class="card">
+    <div class="card-title">📋 レッスン情報</div>
+    <div class="row2">
+      <div class="field">
+        <label>今日の日付</label>
+        <input type="date" id="fDate">
+      </div>
+      <div class="field">
+        <label>お名前</label>
+        <input type="text" id="fName" placeholder="例：齋藤しのぶ">
+      </div>
+    </div>
+
+    <!-- レッスン情報（GAS連携後に表示） -->
+    <div class="lesson-box" id="lessonBox">
+      <h3>📌 本日の担当レッスン</h3>
+      <div id="lessonRows"></div>
+    </div>
+
+    <!-- GAS URL未設定の場合の案内 -->
+    <div class="setup-note" id="setupNote">
+      <b>⚙️ スプレッドシート連携の設定が必要です</b><br>
+      GAS_コード.js をスプレッドシートのApps Scriptに設置し、<br>
+      このHTMLの <code>GAS_URL</code> にWebアプリのURLを貼り付けてください。
+    </div>
+  </div>
+
+  <!-- プログレス -->
+  <div class="prog-wrap">
+    <div class="prog-label"><span>チェック進捗</span><b id="progTxt">0 / 8</b></div>
+    <div class="prog-bar"><div class="prog-fill" id="progFill"></div></div>
+  </div>
+
+  <!-- ① ネット・Zoom -->
+  <div class="section">
+    <div class="sec-hd">
+      <span class="ico">🌐</span><h2>ネット・Zoom</h2>
+      <span class="cnt" id="c-net">0/3</span>
+    </div>
+    <div class="item" onclick="tog(this,'net')">
+      <div class="cb"></div><div class="num">①</div>
+      <div class="txt">有線・USB接続（Wi-Fi OFF）</div>
+    </div>
+    <div class="item" onclick="tog(this,'net')">
+      <div class="cb"></div><div class="num">②</div>
+      <div class="txt">Googleを開きインストラクターサイトにアクセス可能</div>
+    </div>
+    <div class="item" onclick="tog(this,'net')">
+      <div class="cb"></div><div class="num">③</div>
+      <div class="txt">Zoomアップデート完了済</div>
+    </div>
+  </div>
+
+  <!-- ② Bluetoothマイク・カメラ -->
+  <div class="section">
+    <div class="sec-hd">
+      <span class="ico">🎙️</span><h2>Bluetoothマイク・カメラ</h2>
+      <span class="cnt" id="c-dev">0/3</span>
+    </div>
+    <div class="item" onclick="tog(this,'dev')">
+      <div class="cb"></div><div class="num">④</div>
+      <div class="txt">PCとデバイス接続済</div>
+    </div>
+    <div class="item" onclick="tog(this,'dev')">
+      <div class="cb"></div><div class="num">⑤</div>
+      <div class="txt">Zoomオーディオ設定でデバイス接続済</div>
+    </div>
+    <div class="item" onclick="tog(this,'dev')">
+      <div class="cb"></div><div class="num">⑥</div>
+      <div class="txt">画角確認済</div>
+    </div>
+  </div>
+
+  <!-- ③ BGM（任意） -->
+  <div class="section">
+    <div class="sec-hd">
+      <span class="ico">🎵</span><h2>BGM</h2>
+      <span class="opt-badge">使用する場合のみ</span>
+      <span class="cnt" id="c-bgm">0/2</span>
+    </div>
+    <div class="item" onclick="tog(this,'bgm')">
+      <div class="cb"></div><div class="num">⑦</div>
+      <div class="txt">BGMを開き 0:00 で一時停止</div>
+    </div>
+    <div class="item" id="item-bgm2" onclick="togBgm2(event,this)">
+      <div class="cb"></div><div class="num">⑧</div>
+      <div class="txt">
+        トラック対象BGMはトラック作成済である事
+        <a href="https://yukkino.github.io/lava-bgm-check/" target="_blank" id="bgmLink">▶ 音量・共有方法はこちら</a>
+      </div>
+    </div>
+  </div>
+
+  <!-- 相談 -->
+  <div class="card">
+    <div class="card-title">💬 相談</div>
+    <div class="radio-row">
+      <button class="rb" id="r0" onclick="setC('なし')">なし</button>
+      <button class="rb" id="r1" onclick="setC('あり')">あり</button>
+    </div>
+    <div class="ct-box" id="ctBox">
+      <label>内容（管理者より電話をいたします）</label>
+      <textarea id="ctTxt" placeholder="相談内容をご記入ください…"></textarea>
+    </div>
+  </div>
+
+  <!-- 警告 -->
+  <div class="warn" id="warn">⚠️ 必須チェック項目（①〜⑥）が未完了です。全てチェックしてから送信してください。</div>
+
+  <!-- 送信ボタン -->
+  <button class="btn-submit" id="subBtn" onclick="submit()">
+    ✅ チェック完了・LINE送信へ
+    <sub>確認して公式LINEへ通知</sub>
+  </button>
+
+</div><!-- /formView -->
+
+
+<!-- ========== 完了画面 ========== -->
+<div id="doneView">
+
+  <div class="done-hero">
+    <div class="big">🌸</div>
+    <h2>ご準備ありがとうございます！</h2>
+    <p>5分前にZoom開始です。<br>
+    入室後、共同ホストに設定しますので<br>
+    レッスン開始をお願い致します。</p>
+  </div>
+
+  <div class="line-note">
+    <b>📤 LINE公式アカウントへの送信方法</b><br>
+    下のボタンをタップするとLINEが開き、<br>
+    チェック完了メッセージが自動で入力されます。<br>
+    送信先に <b>公式LINE</b> を選択して送信してください。
+  </div>
+
+  <a class="btn-line" id="lineBtn" href="#" target="_blank">💬 LINEで送信する</a>
+  <button class="btn-reset" onclick="reset()">もう一度チェックする</button>
+
+</div><!-- /doneView -->
+
+
+<script>
+// ============================================================
+// ★ ここにGASのウェブアプリURLを貼り付けてください ★
+// GASデプロイ後に表示される「ウェブアプリのURL」をコピーして入れてください
+// 例: 'https://script.google.com/macros/s/XXXX/exec'
+const GAS_URL = '';
+// ============================================================
+
+// 今日の日付をセット
+const today = new Date();
+document.getElementById('fDate').value = today.toISOString().split('T')[0];
+
+// GAS_URL未設定ならセットアップ案内を表示
+if (!GAS_URL) document.getElementById('setupNote').style.display = 'block';
+
+let consult = '';
+let lessonCache = [];
+
+// --- チェック操作 ---
+function tog(el, sec) {
+  el.classList.toggle('on');
+  el.querySelector('.cb').classList.toggle('on');
+  updateProg();
+  updateCnt(sec);
+}
+
+function updateProg() {
+  const all  = document.querySelectorAll('.item').length;
+  const done = document.querySelectorAll('.item.on').length;
+  const pct  = Math.round(done / all * 100);
+  document.getElementById('progFill').style.width = pct + '%';
+  document.getElementById('progTxt').textContent = done + ' / ' + all;
+}
+
+function updateCnt(sec) {
+  const all  = document.querySelectorAll('.item[onclick*="' + sec + '"]').length;
+  const done = document.querySelectorAll('.item.on[onclick*="' + sec + '"]').length;
+  const el   = document.getElementById('c-' + sec);
+  el.textContent = done + '/' + all;
+  el.className   = 'cnt' + (done === all ? ' done' : '');
+}
+
+// --- 相談 ---
+function setC(v) {
+  consult = v;
+  document.getElementById('r0').className = 'rb' + (v === 'なし' ? ' on' : '');
+  document.getElementById('r1').className = 'rb' + (v === 'あり' ? ' on' : '');
+  document.getElementById('ctBox').className = 'ct-box' + (v === 'あり' ? ' show' : '');
+}
+
+// --- レッスン取得（GAS連携） ---
+let fetchTimer = null;
+document.getElementById('fName').addEventListener('input', function() {
+  clearTimeout(fetchTimer);
+  fetchTimer = setTimeout(() => fetchLessons(), 600);
+});
+document.getElementById('fDate').addEventListener('change', () => fetchLessons());
+
+function fetchLessons() {
+  const name = document.getElementById('fName').value.trim();
+  const box  = document.getElementById('lessonBox');
+  const rows = document.getElementById('lessonRows');
+
+  if (name.length < 2) { box.classList.remove('show'); return; }
+  if (!GAS_URL) { box.classList.remove('show'); return; }
+
+  box.classList.add('show');
+  rows.innerHTML = '<div class="lesson-loading">⏳ 読み込み中...</div>';
+
+  // 月を計算（入力した日付から）
+  const dateVal = document.getElementById('fDate').value;
+  const d = dateVal ? new Date(dateVal) : new Date();
+  const yy = String(d.getFullYear()).slice(-2);
+  const mm = d.getMonth() + 1;
+  const monthStr = yy + '年' + mm + '月';
+
+  const url = GAS_URL + '?name=' + encodeURIComponent(name) + '&month=' + encodeURIComponent(monthStr);
+
+  fetch(url)
+    .then(r => r.json())
+    .then(data => {
+      if (data.error) {
+        rows.innerHTML = '<div class="lesson-error">❌ ' + data.error + '</div>';
+        return;
+      }
+      lessonCache = data.lessons || [];
+      if (lessonCache.length === 0) {
+        rows.innerHTML = '<div class="lesson-loading" style="color:#C06060">本日のレッスンが見つかりません</div>';
+        return;
+      }
+      rows.innerHTML = lessonCache.map(l =>
+        `<div class="lesson-row">
+          <div class="lesson-time">${l.start}〜${l.end}</div>
+          <div class="lesson-prog">${l.program}</div>
+          <div class="lesson-mgr">👤 管理者：${l.manager}</div>
+        </div>`
+      ).join('');
+    })
+    .catch(() => {
+      rows.innerHTML = '<div class="lesson-error">❌ 通信エラーが発生しました</div>';
+    });
+}
+
+// BGM⑧専用（リンククリック時はチェックしない）
+function togBgm2(e, el) {
+  if (e.target.closest('a')) return;
+  tog(el, 'bgm');
+}
+
+// --- 送信 ---
+function submit() {
+  const netDone = document.querySelectorAll('.item.on[onclick*="net"]').length;
+  const devDone = document.querySelectorAll('.item.on[onclick*="dev"]').length;
+
+  if (netDone < 3 || devDone < 3) {
+    const w = document.getElementById('warn');
+    w.classList.add('show');
+    w.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    return;
+  }
+  document.getElementById('warn').classList.remove('show');
+
+  const name    = document.getElementById('fName').value || '（名前未入力）';
+  const dateVal = document.getElementById('fDate').value;
+  const dateStr = dateVal
+    ? new Date(dateVal + 'T00:00:00').toLocaleDateString('ja-JP', { year:'numeric', month:'long', day:'numeric', weekday:'short' })
+    : '本日';
+
+  // レッスン情報
+  let lessonLines = '';
+  if (lessonCache.length > 0) {
+    lessonLines = '\n【本日のレッスン】\n' +
+      lessonCache.map((l, i) => `${i+1}. ${l.start}〜${l.end} ${l.program}\n   管理者：${l.manager}`).join('\n');
+  }
+
+  // チェック済み項目
+  const checked = [
+    '① 有線・USB接続（Wi-Fi OFF）',
+    '② インストラクターサイトアクセス確認',
+    '③ Zoomアップデート完了',
+    '④ PCとデバイス接続',
+    '⑤ Zoomオーディオ設定確認',
+    '⑥ 画角確認',
+  ];
+  const bgmDone = document.querySelectorAll('.item.on[onclick*="bgm"]').length;
+  if (bgmDone >= 1) checked.push('⑦ BGM 0:00 で一時停止');
+  if (bgmDone >= 2) checked.push('⑧ BGMトラック作成確認');
+
+  const consultLine = consult === 'あり'
+    ? '\n【相談】あり\n内容：' + (document.getElementById('ctTxt').value || '（記載なし）')
+    : '\n【相談】なし';
+
+  const msg =
+`🌸 出勤チェック完了
+━━━━━━━━━━━━
+${name}
+${dateStr}
+━━━━━━━━━━━━
+✅ ${checked.join('\n✅ ')}
+${consultLine}${lessonLines}
+━━━━━━━━━━━━
+5分前にZoom開始します！`;
+
+  document.getElementById('lineBtn').href = 'https://line.me/R/share?text=' + encodeURIComponent(msg);
+
+  document.getElementById('formView').style.display = 'none';
+  document.getElementById('doneView').style.display = 'block';
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+// --- リセット ---
+function reset() {
+  document.querySelectorAll('.item').forEach(el => {
+    el.classList.remove('on');
+    el.querySelector('.cb').classList.remove('on');
+  });
+  document.getElementById('fName').value = '';
+  document.getElementById('fDate').value = new Date().toISOString().split('T')[0];
+  consult = '';
+  lessonCache = [];
+  document.getElementById('r0').classList.remove('on');
+  document.getElementById('r1').classList.remove('on');
+  document.getElementById('ctBox').classList.remove('show');
+  document.getElementById('ctTxt').value = '';
+  document.getElementById('lessonBox').classList.remove('show');
+  document.getElementById('warn').classList.remove('show');
+  updateProg();
+  ['net','dev','bgm'].forEach(s => updateCnt(s));
+  document.getElementById('formView').style.display = 'block';
+  document.getElementById('doneView').style.display = 'none';
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+</script>
+</body>
+</html>
