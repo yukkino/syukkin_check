@@ -1,1 +1,0 @@
-# syukkin_check
