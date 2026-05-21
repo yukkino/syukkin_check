@@ -179,17 +179,17 @@ body{font-family:'Noto Sans JP',sans-serif;background:var(--bg);min-height:100vh
 
   <!-- 名前入力 -->
   <div class="card">
-    <div class="card-title">📋 本日のレッスン情報</div>
+    <div class="card-title">📋 レッスン情報</div>
     <div class="row2">
       <div class="field">
         <label>お名前</label>
-        <input type="text" id="fName" placeholder="例：関口友紀乃">
+        <input type="text" id="fName" placeholder="例：齋藤しのぶ">
       </div>
     </div>
 
     <!-- レッスン情報（GAS連携後に表示） -->
     <div class="lesson-box" id="lessonBox">
-      <h3>📌 本日の担当レッスン※読み込みに少し時間がかかります</h3>
+      <h3>📌 本日の担当レッスン</h3>
       <div id="lessonRows"></div>
     </div>
 
@@ -218,8 +218,8 @@ body{font-family:'Noto Sans JP',sans-serif;background:var(--bg);min-height:100vh
       <div class="txt">
         ネット接続方法を選択
         <div class="net-radio-group" onclick="event.stopPropagation()">
-          <label class="net-radio"><input type="radio" name="netType" value="有線"> 有線（WiFi OFF必須）</label>
-          <label class="net-radio"><input type="radio" name="netType" value="USB"> USB接続（WiFi OFF必須）</label>
+          <label class="net-radio"><input type="radio" name="netType" value="有線"> 有線（WiFi OFF）</label>
+          <label class="net-radio"><input type="radio" name="netType" value="USB"> USB接続（WiFi OFF）</label>
           <label class="net-radio"><input type="radio" name="netType" value="無線WiFi"> 無線WiFi</label>
         </div>
       </div>
@@ -242,15 +242,15 @@ body{font-family:'Noto Sans JP',sans-serif;background:var(--bg);min-height:100vh
     </div>
     <div class="item" onclick="tog(this,'dev')">
       <div class="cb"></div><div class="num">④</div>
-      <div class="txt">PCとBluetoothマイクのデバイスを接続済である</div>
+      <div class="txt">PCとBluetoothマイクのデバイス接続済</div>
     </div>
     <div class="item" onclick="tog(this,'dev')">
       <div class="cb"></div><div class="num">⑤</div>
-      <div class="txt">Zoomオーディオ設定でBluetoothマイクを検知・接続済である</div>
+      <div class="txt">Zoomオーディオ設定でマイクの接続先がBluetoothマイクのデバイスになっている</div>
     </div>
     <div class="item" onclick="tog(this,'dev')">
       <div class="cb"></div><div class="num">⑥</div>
-      <div class="txt">画角の確認済である
+      <div class="txt">画角を確認済
         <span style="display:block;font-size:11px;color:#C06060;margin-top:3px;">⚠️ 黒いレギンス・ショートパンツのウェアは控えてください</span>
       </div>
     </div>
@@ -278,7 +278,7 @@ body{font-family:'Noto Sans JP',sans-serif;background:var(--bg);min-height:100vh
       <div class="cb"></div><div class="num">⑨</div>
       <div class="txt">
         レッスン別の音量を確認済
-        <span class="expand-link" onclick="toggleBgmPanel(event)">▶ 音量・共有方法を確認する</span>
+        <span class="expand-link" onclick="toggleBgmPanel(event)">▶ 音量・共有方法はこちら</span>
       </div>
     </div>
     <!-- BGM展開パネル -->
@@ -487,7 +487,7 @@ function fetchLessons() {
 
   const url = GAS_URL + '?name=' + encodeURIComponent(name) + '&month=' + encodeURIComponent(monthStr);
 
-  fetch(url)
+  fetch(url, { redirect: 'follow', cache: 'no-store' })
     .then(r => r.json())
     .then(data => {
       if (data.error) {
@@ -496,7 +496,18 @@ function fetchLessons() {
       }
       lessonCache = data.lessons || [];
       if (lessonCache.length === 0) {
-        rows.innerHTML = '<div class="lesson-loading" style="color:#C06060">本日のレッスンが見つかりません</div>';
+        // GASのリダイレクト対策：0件の場合は1.5秒後に再取得を1回だけ試みる
+        if (!fetchLessons._retried) {
+          fetchLessons._retried = true;
+          rows.innerHTML = '<div class="lesson-loading">⏳ 確認中...</div>';
+          setTimeout(() => {
+            fetchLessons._retried = false;
+            fetchLessons();
+          }, 1500);
+        } else {
+          fetchLessons._retried = false;
+          rows.innerHTML = '<div class="lesson-loading" style="color:#C06060">本日のレッスンが見つかりません</div>';
+        }
         return;
       }
       rows.innerHTML = lessonCache.map(l =>
@@ -562,10 +573,7 @@ function submit() {
   document.getElementById('warn').classList.remove('show');
 
   const name    = document.getElementById('fName').value || '（名前未入力）';
-  const dateVal = document.getElementById('fDate').value;
-  const dateStr = dateVal
-    ? new Date(dateVal + 'T00:00:00').toLocaleDateString('ja-JP', { year:'numeric', month:'long', day:'numeric', weekday:'short' })
-    : '本日';
+  const dateStr = new Date().toLocaleDateString('ja-JP', { year:'numeric', month:'long', day:'numeric', weekday:'short' });
 
   // レッスン情報
   let lessonLines = '';
