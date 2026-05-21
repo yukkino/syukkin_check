@@ -189,7 +189,7 @@ body{font-family:'Noto Sans JP',sans-serif;background:var(--bg);min-height:100vh
 
     <!-- レッスン情報（GAS連携後に表示） -->
     <div class="lesson-box" id="lessonBox">
-      <h3>📌 本日の担当レッスン</h3>
+      <h3>📌 本日の担当レッスン※読み込みに少し時間がかかります</h3>
       <div id="lessonRows"></div>
     </div>
 
@@ -218,8 +218,8 @@ body{font-family:'Noto Sans JP',sans-serif;background:var(--bg);min-height:100vh
       <div class="txt">
         ネット接続方法を選択
         <div class="net-radio-group" onclick="event.stopPropagation()">
-          <label class="net-radio"><input type="radio" name="netType" value="有線"> 有線</label>
-          <label class="net-radio"><input type="radio" name="netType" value="USB"> USB接続（WiFi OFF）</label>
+          <label class="net-radio"><input type="radio" name="netType" value="有線"> 有線（WiFi OFF必須）</label>
+          <label class="net-radio"><input type="radio" name="netType" value="USB"> USB接続（WiFi OFF必須）</label>
           <label class="net-radio"><input type="radio" name="netType" value="無線WiFi"> 無線WiFi</label>
         </div>
       </div>
