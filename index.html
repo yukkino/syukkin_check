@@ -183,7 +183,7 @@ body{font-family:'Noto Sans JP',sans-serif;background:var(--bg);min-height:100vh
     <div class="row2">
       <div class="field">
         <label>お名前</label>
-        <input type="text" id="fName" placeholder="例：齋藤しのぶ">
+        <input type="text" id="fName" placeholder="例：関口友紀乃">
       </div>
     </div>
 
@@ -225,11 +225,11 @@ body{font-family:'Noto Sans JP',sans-serif;background:var(--bg);min-height:100vh
     </div>
     <div class="item" data-sec="net" onclick="tog(this,'net')">
       <div class="cb"></div><div class="num">②</div>
-      <div class="txt">Googleを開きインストラクターサイトにアクセス可能</div>
+      <div class="txt">Googleを開きインストラクターサイトにログイン済み</div>
     </div>
     <div class="item" data-sec="net" onclick="tog(this,'net')">
       <div class="cb"></div><div class="num">③</div>
-      <div class="txt">Zoomアップデート完了済</div>
+      <div class="txt">Zoomアップデート完了済み</div>
     </div>
   </div>
 
@@ -241,7 +241,7 @@ body{font-family:'Noto Sans JP',sans-serif;background:var(--bg);min-height:100vh
     </div>
     <div class="item" data-sec="dev" onclick="tog(this,'dev')">
       <div class="cb"></div><div class="num">④</div>
-      <div class="txt">PCとBluetoothマイクのデバイス接続済</div>
+      <div class="txt">PCとBluetoothマイクのデバイス接続済み</div>
     </div>
     <div class="item" data-sec="dev" onclick="tog(this,'dev')">
       <div class="cb"></div><div class="num">⑤</div>
@@ -249,7 +249,7 @@ body{font-family:'Noto Sans JP',sans-serif;background:var(--bg);min-height:100vh
     </div>
     <div class="item" data-sec="dev" onclick="tog(this,'dev')">
       <div class="cb"></div><div class="num">⑥</div>
-      <div class="txt">画角を確認済
+      <div class="txt">画角を確認済み
         <span style="display:block;font-size:11px;color:#C06060;margin-top:3px;">⚠️ 黒いレギンス・ショートパンツのウェアは控えてください</span>
       </div>
     </div>
@@ -259,7 +259,7 @@ body{font-family:'Noto Sans JP',sans-serif;background:var(--bg);min-height:100vh
   <div class="section">
     <div class="sec-hd">
       <span class="ico">🎵</span><h2>BGM</h2>
-      <span class="opt-badge">使用する場合のみ</span>
+      <span class="opt-badge">使用する場合は音量もチェック</span>
       <span class="cnt" id="c-bgm">0/3</span>
     </div>
     <div class="item" data-sec="bgm" onclick="tog(this,'bgm')">
@@ -277,7 +277,7 @@ body{font-family:'Noto Sans JP',sans-serif;background:var(--bg);min-height:100vh
       <div class="cb"></div><div class="num">⑨</div>
       <div class="txt">
         レッスン別の音量を確認済
-        <span class="expand-link" onclick="toggleBgmPanel(event)">▶ 音量・共有方法はこちら</span>
+        <span class="expand-link" onclick="toggleBgmPanel(event)">▶ 音量・BGM共有方法はこちら</span>
       </div>
     </div>
     <!-- BGM展開パネル -->
@@ -594,7 +594,7 @@ ${dateStr}
 ✅ ${checked.join('\n✅ ')}
 ${consultLine}${lessonLines}
 ━━━━━━━━━━━━
-5分前にZoom開始します！`;
+本日もよろしくお願いいたします！`;
 
   document.getElementById('lineBtn').href = 'https://line.me/R/share?text=' + encodeURIComponent(msg);
 
