@@ -348,7 +348,7 @@ body{font-family:'Noto Sans JP',sans-serif;background:var(--bg);min-height:100vh
 
   <!-- 相談 -->
   <div class="card">
-    <div class="card-title">💬 相談</div>
+    <div class="card-title">💬 何か気になる事・心配な事など</div>
     <div class="radio-row">
       <button class="rb" id="r0" onclick="setC('なし')">なし</button>
       <button class="rb" id="r1" onclick="setC('あり')">あり</button>
@@ -448,7 +448,7 @@ function updateCnt(sec) {
   el.className   = 'cnt' + (done === all ? ' done' : '');
 }
 
-// --- 相談 ---
+// --- 何か気になる事・心配に感じている事など ---
 function setC(v) {
   consult = v;
   document.getElementById('r0').className = 'rb' + (v === 'なし' ? ' on' : '');
@@ -582,8 +582,8 @@ function submit() {
   if (bgmDone >= 3) checked.push('⑨ レッスン別音量確認済');
 
   const consultLine = consult === 'あり'
-    ? '\n【相談】あり\n内容：' + (document.getElementById('ctTxt').value || '（記載なし）')
-    : '\n【相談】なし';
+    ? '\n【心配な事・気になる事】あり\n内容：' + (document.getElementById('ctTxt').value || '（記載なし）')
+    : '\n【心配な事・気になる事】なし';
 
   const msg =
 `🌸 出勤チェック完了
