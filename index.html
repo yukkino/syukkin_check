@@ -154,6 +154,13 @@ body{font-family:'Noto Sans JP',sans-serif;background:var(--bg);min-height:100vh
 }
 .btn-reset:active{background:var(--bg)}
 
+.btn-close{
+  width:100%;padding:12px;background:none;border:1.5px solid #ddd;
+  border-radius:12px;font-size:13px;font-family:'Noto Sans JP',sans-serif;
+  color:#aaa;cursor:pointer;margin-top:6px;transition:all .2s
+}
+.btn-close:active{background:var(--bg)}
+
 /* GASセットアップ案内 */
 .setup-note{
   background:#F8F8FF;border:1px solid #D0D0F0;border-radius:12px;
@@ -348,7 +355,7 @@ body{font-family:'Noto Sans JP',sans-serif;background:var(--bg);min-height:100vh
 
   <!-- 相談 -->
   <div class="card">
-    <div class="card-title">💬 相談</div>
+    <div class="card-title">💬 何か気になる事・心配な事など</div>
     <div class="radio-row">
       <button class="rb" id="r0" onclick="setC('なし')">なし</button>
       <button class="rb" id="r1" onclick="setC('あり')">あり</button>
@@ -383,22 +390,26 @@ body{font-family:'Noto Sans JP',sans-serif;background:var(--bg);min-height:100vh
   </div>
 
   <div class="line-note">
-    <b>📤 LINE公式アカウントへの送信方法</b><br>
+    <b>📤 公式LINEへの送信方法</b><br>
     下のボタンをタップするとLINEが開き、<br>
     チェック完了メッセージが自動で入力されます。<br>
-    送信先に <b>公式LINE</b> を選択して送信してください。
+    そのまま <b>送信ボタン</b> を押してください。
   </div>
 
-  <a class="btn-line" id="lineBtn" href="#" target="_blank">💬 LINEで送信する</a>
+  <a class="btn-line" id="lineBtn" href="#">💬 LINEで送信する</a>
   <button class="btn-reset" onclick="reset()">もう一度チェックする</button>
+  <button class="btn-close" onclick="tryClose()">✖ このページを閉じる</button>
 
 </div><!-- /doneView -->
 
 
 <script>
 // ============================================================
-// ★ ここにGASのウェブアプリURLを貼り付けてください ★
+// ★ GASのウェブアプリURL
 const GAS_URL = 'https://script.google.com/macros/s/AKfycbxI11KH3f9Mudypie54ObvkBBi8ClO3zYGzeUhH_1vd2eFtCnUeXK6BxEQaNMp6vmIzkw/exec';
+
+// ★ 公式LINEのBasic ID
+const LINE_OFFICIAL_ID = '@292qdyxi';
 // ============================================================
 
 if (!GAS_URL) document.getElementById('setupNote').style.display = 'block';
@@ -439,7 +450,6 @@ function updateProg() {
   document.getElementById('progTxt').textContent = done + ' / ' + all;
 }
 
-// ★ 修正箇所: data-sec 属性でセクションを判定（大文字小文字問題を根本解決）
 function updateCnt(sec) {
   const all  = document.querySelectorAll('.item[data-sec="' + sec + '"]').length;
   const done = document.querySelectorAll('.item.on[data-sec="' + sec + '"]').length;
@@ -448,7 +458,7 @@ function updateCnt(sec) {
   el.className   = 'cnt' + (done === all ? ' done' : '');
 }
 
-// --- 相談 ---
+// --- 何か気になる事・心配に感じている事など ---
 function setC(v) {
   consult = v;
   document.getElementById('r0').className = 'rb' + (v === 'なし' ? ' on' : '');
@@ -546,7 +556,6 @@ function filterBgm() {
 }
 
 // --- 送信 ---
-// ★ 修正箇所: data-sec 属性でカウント（onclick の大文字小文字バグを解消）
 function submit() {
   const netDone = document.querySelectorAll('.item.on[data-sec="net"]').length;
   const devDone = document.querySelectorAll('.item.on[data-sec="dev"]').length;
@@ -565,17 +574,11 @@ function submit() {
   let lessonLines = '';
   if (lessonCache.length > 0) {
     lessonLines = '\n【本日のレッスン】\n' +
-      lessonCache.map((l, i) => `${i+1}. ${l.start}〜${l.end} ${l.program}\n   管理者：${l.manager}`).join('\n');
+      lessonCache.map((l, i) => ${i+1}. ${l.start}〜${l.end} ${l.program}\n   管理者：${l.manager}).join('\n');
   }
 
-  const netTypeVal = document.querySelector('input[name="netType"]:checked')?.value || '';
-  const netLabelMap = {
-    '有線': '① 有線接続（Wi-Fi OFF）',
-    'USB': '① USB接続（Wi-Fi OFF）',
-    '無線WiFi': '① 無線WiFi接続',
-  };
   const checked = [
-    netLabelMap[netTypeVal] || '① ネット接続方法未選択',
+    '① 有線・USB接続（Wi-Fi OFF）',
     '② インストラクターサイトアクセス確認',
     '③ Zoomアップデート完了',
     '④ PCとデバイス接続',
@@ -588,8 +591,8 @@ function submit() {
   if (bgmDone >= 3) checked.push('⑨ レッスン別音量確認済');
 
   const consultLine = consult === 'あり'
-    ? '\n【相談】あり\n内容：' + (document.getElementById('ctTxt').value || '（記載なし）')
-    : '\n【相談】なし';
+    ? '\n【心配な事・気になる事】あり\n内容：' + (document.getElementById('ctTxt').value || '（記載なし）')
+    : '\n【心配な事・気になる事】なし';
 
   const msg =
 `🌸 出勤チェック完了
@@ -602,7 +605,9 @@ ${consultLine}${lessonLines}
 ━━━━━━━━━━━━
 本日もよろしくお願いいたします！`;
 
-  document.getElementById('lineBtn').href = 'https://line.me/R/share?text=' + encodeURIComponent(msg);
+  // 公式LINEへ直接送信
+  document.getElementById('lineBtn').href =
+    'https://line.me/R/oaMessage/' + encodeURIComponent(LINE_OFFICIAL_ID) + '/?text=' + encodeURIComponent(msg);
 
   document.getElementById('formView').style.display = 'none';
   document.getElementById('doneView').style.display = 'block';
@@ -631,6 +636,15 @@ function reset() {
   document.getElementById('formView').style.display = 'block';
   document.getElementById('doneView').style.display = 'none';
   window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+// --- ページを閉じる ---
+function tryClose() {
+  window.close();
+  // スマホブラウザでは window.close() が効かないため案内を表示
+  setTimeout(() => {
+    alert('ブラウザのタブを閉じてLINEアプリに戻ってください。');
+  }, 300);
 }
 </script>
 </body>
