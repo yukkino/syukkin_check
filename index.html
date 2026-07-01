@@ -574,11 +574,17 @@ function submit() {
   let lessonLines = '';
   if (lessonCache.length > 0) {
     lessonLines = '\n【本日のレッスン】\n' +
-      lessonCache.map((l, i) => ${i+1}. ${l.start}〜${l.end} ${l.program}\n   管理者：${l.manager}).join('\n');
+      lessonCache.map((l, i) => `${i+1}. ${l.start}〜${l.end} ${l.program}\n   管理者：${l.manager}`).join('\n');
   }
 
+  const netTypeVal = document.querySelector('input[name="netType"]:checked')?.value || '';
+  const netLabelMap = {
+    '有線': '① 有線接続（Wi-Fi OFF）',
+    'USB': '① USB接続（Wi-Fi OFF）',
+    '無線WiFi': '① 無線WiFi接続',
+  };
   const checked = [
-    '① 有線・USB接続（Wi-Fi OFF）',
+    netLabelMap[netTypeVal] || '① ネット接続方法未選択',
     '② インストラクターサイトアクセス確認',
     '③ Zoomアップデート完了',
     '④ PCとデバイス接続',
